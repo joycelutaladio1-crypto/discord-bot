@@ -1,0 +1,5 @@
+{
+  "token": "YOUR_BOT_TOKEN_HERE",
+  "clientId": "YOUR_APPLICATION_CLIENT_ID_HERE",
+  "guildId": "YOUR_RP_SERVER_ID_HERE"
+}

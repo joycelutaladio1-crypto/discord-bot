@@ -1,6 +1,6 @@
-# [Project name]
+# Discord RP Bot
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A Discord.js v14 roleplay server bot with slash-command loading, event handling, dice rolls, and RP action messages.
 
 ## Run & Operate
 
@@ -10,6 +10,9 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm run deploy-commands` — register the bot's slash commands
+- `pnpm start` — start the Discord bot
+- `pnpm run dev` — start the bot with Node's file watcher
 
 ## Stack
 
@@ -22,23 +25,28 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `index.js` — bot client setup and automatic command/event loading
+- `commands/` — slash commands and command registration
+- `events/` — Discord client and interaction event handlers
+- `config.json` — local bot configuration placeholders
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Bot credentials prefer environment variables (`DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, and `DISCORD_GUILD_ID`) over `config.json`.
+- Guild-specific command registration is used when `guildId` is configured so new commands appear quickly during development.
+- Commands are loaded dynamically from `commands/`, so new slash commands only need a module with `data` and `execute`.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+The bot provides `/ping`, `/roll`, `/me`, and `/serverinfo` slash commands for a Discord RP server.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+No additional preferences recorded.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+Run `pnpm run deploy-commands` after adding or changing slash commands. Never commit a real bot token.
 
 ## Pointers
 
