@@ -1,5 +1,25 @@
 {
-  "token": "YOUR_BOT_TOKEN_HERE",
-  "clientId": "YOUR_APPLICATION_CLIENT_ID_HERE",
-  "guildId": "YOUR_RP_SERVER_ID_HERE"
+  "token":"",
+  "clientId": "1534863426210234489",
+  "guildId": "1518135055497822358",
+
+  "serverName": "Valenciennes RP",
+
+  "colors": {
+    "primary": "#2B65FF",
+    "success": "#3BA55D",
+    "danger": "#ED4245"
+  },
+
+  "links": {
+    "reglement": "",
+    "faq": "",
+    "roblox": "",
+    "site": "",
+    "discord": ""
+  },
+
+  "roles": {
+    "pingSession": ""
+  }
 }
