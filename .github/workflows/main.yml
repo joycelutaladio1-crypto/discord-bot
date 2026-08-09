@@ -16,8 +16,14 @@ jobs:
         with:
           node-version: 20
 
+      - name: Activer pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+          pnpm --version
+
       - name: Installer les dépendances
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Démarrer le bot
         env:
