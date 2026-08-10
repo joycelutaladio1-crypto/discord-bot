@@ -23,7 +23,7 @@ jobs:
           pnpm --version
 
       - name: Installer les dépendances
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Démarrer le bot
         env:
