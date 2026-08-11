@@ -10,7 +10,7 @@ const {
 
 const googleTTS = require("google-tts-api");
 const https = require("node:https");
-const { Readable } = require("node:stream");
+const { PassThrough } = require("node:stream");
 
 // 🔊 ID DU SALON VOCAL D'ATTENTE
 const ATTENTE_CHANNEL_ID = "1520901451185127424";
@@ -30,7 +30,6 @@ function downloadAudio(url) {
             .catch(reject);
         }
 
-        // Vérification de la réponse
         if (response.statusCode !== 200) {
           reject(
             new Error(
@@ -88,7 +87,7 @@ module.exports = {
         selfMute: false,
       });
 
-      // Attendre que la connexion soit prête
+      // Attendre que le bot soit connecté
       await entersState(
         connection,
         VoiceConnectionStatus.Ready,
@@ -105,7 +104,7 @@ module.exports = {
 
       console.log(`[VOICE] 🗣️ ${texte}`);
 
-      // 🇫🇷 Génération du lien audio Google TTS
+      // 🇫🇷 Générer l'audio Google TTS
       const audioUrl = googleTTS.getAudioUrl(texte, {
         lang: "fr",
         slow: false,
@@ -117,11 +116,14 @@ module.exports = {
       // Télécharger l'audio
       const audioBuffer = await downloadAudio(audioUrl);
 
-      // Transformer le Buffer en véritable Stream
-      const audioStream = Readable.from([audioBuffer]);
+      // Transformer le Buffer en vrai flux audio binaire
+      const audioStream = new PassThrough();
+      audioStream.end(audioBuffer);
 
       // Détecter automatiquement le format audio
       const { stream, type } = await demuxProbe(audioStream);
+
+      console.log("[VOICE] 🎵 Format audio détecté.");
 
       // 🎵 Créer le lecteur
       const player = createAudioPlayer();
@@ -130,10 +132,10 @@ module.exports = {
         inputType: type,
       });
 
-      // Connecter le lecteur au salon vocal
+      // Connecter le lecteur au vocal
       connection.subscribe(player);
 
-      // 🔊 Lire la phrase
+      // 🔊 Lire l'annonce
       player.play(resource);
 
       console.log("[VOICE] ▶️ Lecture de l'annonce...");
@@ -150,7 +152,7 @@ module.exports = {
         }, 1000);
       });
 
-      // Gestion des erreurs audio
+      // Erreur audio
       player.on("error", (error) => {
         console.error("[VOICE] ❌ Erreur audio :", error);
 
