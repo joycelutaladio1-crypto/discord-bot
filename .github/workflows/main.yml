@@ -16,6 +16,12 @@ jobs:
         with:
           node-version: 20
 
+      - name: Installer FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version
+
       - name: Activer pnpm
         run: |
           corepack enable
