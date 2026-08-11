@@ -4,51 +4,55 @@ const {
   createAudioResource,
   AudioPlayerStatus,
   VoiceConnectionStatus,
-  StreamType,
   entersState,
   demuxProbe,
 } = require("@discordjs/voice");
 
 const googleTTS = require("google-tts-api");
 const https = require("node:https");
+const { Readable } = require("node:stream");
 
 // 🔊 ID DU SALON VOCAL D'ATTENTE
 const ATTENTE_CHANNEL_ID = "1520901451185127424";
 
 function downloadAudio(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (response) => {
-      if (
-        response.statusCode >= 300 &&
-        response.statusCode < 400 &&
-        response.headers.location
-      ) {
-        return downloadAudio(response.headers.location)
-          .then(resolve)
-          .catch(reject);
-      }
+    https
+      .get(url, (response) => {
+        // Gestion des redirections
+        if (
+          response.statusCode >= 300 &&
+          response.statusCode < 400 &&
+          response.headers.location
+        ) {
+          return downloadAudio(response.headers.location)
+            .then(resolve)
+            .catch(reject);
+        }
 
-      if (response.statusCode !== 200) {
-        reject(
-          new Error(
-            `Google TTS a répondu avec le code ${response.statusCode}`
-          )
-        );
-        return;
-      }
+        // Vérification de la réponse
+        if (response.statusCode !== 200) {
+          reject(
+            new Error(
+              `Google TTS a répondu avec le code ${response.statusCode}`
+            )
+          );
+          return;
+        }
 
-      const chunks = [];
+        const chunks = [];
 
-      response.on("data", (chunk) => {
-        chunks.push(chunk);
-      });
+        response.on("data", (chunk) => {
+          chunks.push(chunk);
+        });
 
-      response.on("end", () => {
-        resolve(Buffer.concat(chunks));
-      });
+        response.on("end", () => {
+          resolve(Buffer.concat(chunks));
+        });
 
-      response.on("error", reject);
-    }).on("error", reject);
+        response.on("error", reject);
+      })
+      .on("error", reject);
   });
 }
 
@@ -59,10 +63,10 @@ module.exports = {
     // Quelqu'un quitte un vocal → on ignore
     if (!newState.channelId) return;
 
-    // Ce n'est pas le salon d'attente → on ignore
+    // Vérifie que c'est le salon d'attente
     if (newState.channelId !== ATTENTE_CHANNEL_ID) return;
 
-    // Si c'est un bot → on ignore
+    // Ignore les bots
     if (!newState.member || newState.member.user.bot) return;
 
     const member = newState.member;
@@ -84,7 +88,7 @@ module.exports = {
         selfMute: false,
       });
 
-      // Attendre que le bot soit réellement connecté
+      // Attendre que la connexion soit prête
       await entersState(
         connection,
         VoiceConnectionStatus.Ready,
@@ -113,8 +117,11 @@ module.exports = {
       // Télécharger l'audio
       const audioBuffer = await downloadAudio(audioUrl);
 
+      // Transformer le Buffer en véritable Stream
+      const audioStream = Readable.from([audioBuffer]);
+
       // Détecter automatiquement le format audio
-      const { stream, type } = await demuxProbe(audioBuffer);
+      const { stream, type } = await demuxProbe(audioStream);
 
       // 🎵 Créer le lecteur
       const player = createAudioPlayer();
@@ -123,6 +130,7 @@ module.exports = {
         inputType: type,
       });
 
+      // Connecter le lecteur au salon vocal
       connection.subscribe(player);
 
       // 🔊 Lire la phrase
@@ -130,7 +138,7 @@ module.exports = {
 
       console.log("[VOICE] ▶️ Lecture de l'annonce...");
 
-      // Quand la phrase est terminée
+      // Quand l'annonce est terminée
       player.once(AudioPlayerStatus.Idle, () => {
         console.log("[VOICE] ✅ Annonce terminée.");
 
@@ -142,7 +150,7 @@ module.exports = {
         }, 1000);
       });
 
-      // Erreur du lecteur
+      // Gestion des erreurs audio
       player.on("error", (error) => {
         console.error("[VOICE] ❌ Erreur audio :", error);
 
@@ -150,7 +158,6 @@ module.exports = {
           connection.destroy();
         }
       });
-
     } catch (error) {
       console.error("[VOICE] ❌ Erreur :", error);
 
